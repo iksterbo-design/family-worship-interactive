@@ -31,6 +31,10 @@ export function App(): HTMLElement {
     b.setAttribute('aria-label', t.label);
     tabBar.appendChild(b);
   }
+  // Set initial active tab highlight (Worship)
+  const worshipBtn = tabBar.querySelector('button[data-tab="worship"]') as HTMLElement;
+  worshipBtn.className += ' tw-bg-violet-50 tw-border-violet-500 tw-text-violet-600';
+  worshipBtn.setAttribute('aria-pressed', 'true');
   root.appendChild(tabBar);
 
   const content = document.createElement('div');
@@ -44,7 +48,7 @@ export function App(): HTMLElement {
       ['Song queue items', queue.length.toString(), ''],
     ];
     const statsHtml = stats.map((s) =>
-      `<Card title="${s[0]}"><div class="tw-text-2xl tw-font-bold tw-text-slate-800">${s[1]}</div><div class="tw-text-xs tw-text-slate-500">${s[2]}</div></Card>`).join('');
+      Card({ title: s[0], children: `<div class="tw-text-2xl tw-font-bold tw-text-slate-800">${s[1]}</div><div class="tw-text-xs tw-text-slate-500">${s[2]}</div>` })).join('');
     const flow = [
       ['Opening prayer', '0:00'], ['Worship songs', '0:20'], ['Scripture reading', '0:40'], ['Offering', '0:55'], ['Prayer & blessing', '1:05']
     ];
@@ -60,37 +64,29 @@ export function App(): HTMLElement {
       <div class="lg:tw-span-2">
         <div class="tw-flex tw-items-center tw-gap-3 tw-mb-3"><span class="tw-font-semibold tw-text-slate-800">Total family activity</span><span id="stat-contrib" class="tw-text-lg tw-font-bold tw-text-violet-600">${members.reduce((a, m) => a + m.contributions, 0)}</span></div>
         <div class="tw-grid tw-grid-cols-1 tw-gap-3">${statsHtml}</div>
-        <Card title="Worship Service Flow" desc="Family worship service timeline"><div class="tw-mt-3">${flowHtml}</div></Card>
-        <Card title="Prayer Requests" desc="Share prayers for the family"><div class="tw-mt-2 tw-space-y-2">${prayerHtml}</div><Button label="Add prayer" size="sm" variant="secondary" icon="+"/></Card>
+        ${Card({ title: "Worship Service Flow", desc: "Family worship service timeline", children: `<div class="tw-mt-3">${flowHtml}</div>` })}
+        ${Card({ title: "Prayer Requests", desc: "Share prayers for the family", children: `<div class="tw-mt-2 tw-space-y-2">${prayerHtml}</div><Button label="Add prayer" size="sm" variant="secondary" icon="+"/>` })}
       </div>
       <div class="lg:tw-w-80">
-        <Card title="Worship Songs" desc="Song queue"><div class="tw-max-h-64 tw-overflow-y-auto tw-text-sm tw-space-y-1">${queueHtml}</div></Card>
-        <Card title="Family Roster" desc="Contributions on stage"><div class="tw-max-h-64 tw-overflow-y-auto tw-text-sm tw-space-y-1">${memberBox}</div></Card>
+        ${Card({ title: "Worship Songs", desc: "Song queue", children: `<div class="tw-max-h-64 tw-overflow-y-auto tw-text-sm tw-space-y-1">${queueHtml}</div>` })}
+        ${Card({ title: "Family Roster", desc: "Contributions on stage", children: `<div class="tw-max-h-64 tw-overflow-y-auto tw-text-sm tw-space-y-1">${memberBox}</div>` })}
       </div>
     `;
   };
 
   const renderSongs = (): string => {
+    const songHtml = queue.map(q =>
+      `<div class="tw-flex tw-items-center tw-gap-3 tw-px-2 tw-py-1.5 tw-border-b tw-border-slate-100 tw-bg-white tw-shadow-sm tw-cursor-pointer hover:tw-border-violet-300 tw-transition"><span class="tw-text-xs tw-text-slate-500">${q.song}</span><span class="tw-text-xs tw-text-slate-500 tw-w-24">${q.church}</span><span class="tw-text-xs tw-text-slate-500">${q.meter}</span><Button label="Play" size="sm" variant="success" icon="▶"/></div>`).join('');
     return `
-      <Card title="Song Queue" desc="Select a song to hear">
-        <div class="tw-max-h-64 tw-overflow-y-auto tw-text-sm tw-space-y-1">
-          ${queue.map(q =>
-            `<div class="tw-flex tw-items-center tw-gap-3 tw-px-2 tw-py-1.5 tw-border-b tw-border-slate-100 tw-bg-white tw-shadow-sm tw-cursor-pointer hover:tw-border-violet-300 tw-transition"><span class="tw-text-xs tw-text-slate-500">${q.song}</span><span class="tw-text-xs tw-text-slate-500 tw-w-24">${q.church}</span><span class="tw-text-xs tw-text-slate-500">${q.meter}</span><Button label="Play" size="sm" variant="success" icon="▶"/></div>`).join('')}
-          <div class="tw-mt-2 tw-text-center tw-text-xs tw-text-slate-400">+ Add song to queue</div>
-        </div>
-      </Card>
+      ${Card({ title: "Song Queue", desc: "Select a song to hear", children: `<div class="tw-max-h-64 tw-overflow-y-auto tw-text-sm tw-space-y-1">${songHtml}<div class="tw-mt-2 tw-text-center tw-text-xs tw-text-slate-400">+ Add song to queue</div></div>` })}
     `;
   };
 
   const renderMembers = (): string => {
+    const memberBox = members.map(m =>
+      `<div class="tw-flex tw-items-center tw-gap-2 tw-px-2 tw-py-1.5 tw-border-b tw-border-slate-100 tw-bg-white tw-shadow-sm tw-cursor-pointer hover:tw-border-violet-300 tw-transition"><span class="tw-text-sm tw-font-semibold tw-text-slate-800">${m.emoji} ${m.name}</span><span class="tw-text-xs tw-text-slate-500">${m.role}</span><span class="tw-text-xs tw-text-slate-500">${m.contributions} contrib</span></div>`).join('');
     return `
-      <Card title="Family Roster" desc="Family members and their contributions">
-        <div class="tw-max-h-64 tw-overflow-y-auto tw-text-sm tw-space-y-1">
-          ${members.map(m =>
-            `<div class="tw-flex tw-items-center tw-gap-2 tw-px-2 tw-py-1.5 tw-border-b tw-border-slate-100 tw-bg-white tw-shadow-sm tw-cursor-pointer hover:tw-border-violet-300 tw-transition"><span class="tw-text-sm tw-font-semibold tw-text-slate-800">${m.emoji} ${m.name}</span><span class="tw-text-xs tw-text-slate-500">${m.role}</span><span class="tw-text-xs tw-text-slate-500">${m.contributions} contrib</span></div>`).join('')}
-          <div class="tw-mt-2 tw-text-center tw-text-xs tw-text-slate-400">+ Add member</div>
-        </div>
-      </Card>
+      ${Card({ title: "Family Roster", desc: "Family members and their contributions", children: `<div class="tw-max-h-64 tw-overflow-y-auto tw-text-sm tw-space-y-1">${memberBox}<div class="tw-mt-2 tw-text-center tw-text-xs tw-text-slate-400">+ Add member</div></div>` })}
     `;
   };
 
@@ -98,28 +94,28 @@ export function App(): HTMLElement {
     const quizQs = getAllQuizQuestions();
     const flashcards = getAllFlashcards();
     const quizHtml = quizQs.length === 0
-      ? '<Empty msg="No quiz questions loaded." />'
+      ? Empty({ msg: "No quiz questions loaded." })
       : `<div class="tw-mt-2 tw-space-y-2">${quizQs.slice(0, 5).map((q, i) =>
           `<div class="tw-mb-4 tw-border tw-border-slate-200 tw-rounded-lg tw-px-3 tw-bg-white tw-shadow-sm"><p class="tw-text-sm tw-font-medium tw-text-slate-800">${i+1}. ${q.question}</p><div class="tw-mt-2 tw-flex tw-flex-wrap tw-gap-2">${q.options.map(o => `<button class="tw-text-sm tw-px-3 tw-py-1.5 tw-rounded-md tw-border tw-border-slate-200 tw-bg-white tw-text-slate-700 tw-hover:border-violet-300 tw-transition tw-text-xs">${o}</button>`).join('')}</div><p class="tw-text-xs tw-text-slate-400 tw-mt-1 tw-hidden">${q.explanation}</p></div>`).join('')}</div>`;
     const decksHtml = cardDecks.map(d =>
       `<button class="tw-w-full tw-text-left tw-px-3 tw-py-2 tw-rounded-md tw-border tw-border-slate-200 tw-bg-white tw-text-left tw-space-y-1 tw-hover:border-violet-300 tw-transition"><span class="tw-text-sm tw-font-semibold tw-text-slate-800">${d.icon} ${d.title}</span><span class="tw-text-xs tw-text-slate-400">${d.count} cards</span></button>`).join('');
     const flashcardHtml = flashcards.slice(0, 8).map(f =>
-      `<Flashcard front="${f.question}" back="${f.answer}" key="${f.id}"/>`).join('');
+      Flashcard({ front: f.question })).join('');
     const gameCards = `
-      <div class="tw-mt-3 tw-border-t tw-border-slate-200 tw-pt-2"><div class="tw-text-sm tw-text-slate-700 tw-font-medium tw-mb-1">Bingo</div><BingoCard/></div>
-      <div class="tw-mt-3 tw-border-t tw-border-slate-200 tw-pt-2"><div class="tw-text-sm tw-text-slate-700 tw-font-medium tw-mb-1">Memory Match</div><MemoryCard pairs={['📖','📖','✝️','✝️','🎵','🎵','🕯️','🕯️']}/></div>
+      <div class="tw-mt-3 tw-border-t tw-border-slate-200 tw-pt-2"><div class="tw-text-sm tw-text-slate-700 tw-font-medium tw-mb-1">Bingo</div>${BingoCard({})}</div>
+      <div class="tw-mt-3 tw-border-t tw-border-slate-200 tw-pt-2"><div class="tw-text-sm tw-text-slate-700 tw-font-medium tw-mb-1">Memory Match</div>${MemoryCard({ pairs: ['📖','📖','✝️','✝️','🎵','🎵','🕯️','🕯️'] })}</div>
     `;
     return `
       <div class="lg:tw-span-2">
-        <Card title="Scripture Flashcards" desc="Study scripture by card"><div class="tw-mt-2 tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-2">${decksHtml}</div></Card>
-        <Card title="Games & Learning" desc="Interactive learning for the family">
+        ${Card({ title: "Scripture Flashcards", desc: "Study scripture by card", children: `<div class="tw-mt-2 tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-2">${decksHtml}</div>` })}
+        ${Card({ title: "Games & Learning", desc: "Interactive learning for the family", children: `
           <div class="tw-mt-2 tw-space-y-3">
             <div class="tw-text-sm tw-text-slate-700 tw-font-medium">Flashcards</div>
             <div class="tw-mt-1 tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-2">${flashcardHtml}</div>
             <div class="tw-mt-3 tw-border-t tw-border-slate-200 tw-pt-2"><div class="tw-text-sm tw-text-slate-700 tw-font-medium tw-mb-1">Bible Quiz</div>${quizHtml}</div>
             ${gameCards}
           </div>
-        </Card>
+        ` })}
       </div>
     `;
   };
@@ -131,10 +127,10 @@ export function App(): HTMLElement {
       return `<div class="tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-border-b tw-border-slate-100 tw-bg-white tw-shadow-sm tw-rounded-lg tw-hover:shadow-md tw-transition"><span class="tw-text-2xl">${h.icon}</span><div class="tw-flex-1 tw-min-w-0"><p class="tw-text-sm tw-font-medium tw-text-slate-800">${h.name}</p><p class="tw-text-xs tw-text-slate-400">${h.frequency} · goal ${h.goal} ${h.frequency === 'daily' ? 'days' : 'weeks'} · ${daysLeft}d left</p></div><div class="tw-flex tw-items-center tw-gap-2"><div class="tw-h-2 tw-w-24 tw-rounded-full tw-bg-slate-200 tw-overflow-hidden"><div class="tw-h-full tw-w-0 tw-rounded-full tw-bg-violet-500 tw-transition-all tw-duration-500"></div></div><span class="tw-text-xs tw-text-slate-500 tw-font-medium">0/${h.goal}</span></div></div>`;
     }).join('');
     return `
-      <Card title="Family Habits" desc="Track daily spiritual habits">
+      ${Card({ title: "Family Habits", desc: "Track daily spiritual habits", children: `
         <div class="tw-mt-2 tw-space-y-2">${habitsHtml}</div>
         <Button label="New habit" size="sm" variant="secondary" icon="+"/>
-      </Card>
+      ` })}
     `;
   };
 
@@ -151,10 +147,13 @@ export function App(): HTMLElement {
     if (!btn) return;
     const tab = (btn as HTMLElement).dataset.tab as keyof typeof renderer;
     tabBar.querySelectorAll('button').forEach(b => {
-      b.className = b.className.replace('tw-border-violet-500', 'tw-border-slate-200').replace('tw-text-violet-600', 'tw-text-slate-600').replace('tw-bg-violet-50', 'tw-bg-white');
+      b.className = b.className
+        .replace('tw-bg-violet-50', 'tw-bg-white')
+        .replace('tw-border-violet-500', 'tw-border-slate-200')
+        .replace('tw-text-violet-600', 'tw-text-slate-600');
       b.setAttribute('aria-pressed', 'false');
     });
-    btn.className = btn.className.replace('tw-border-slate-200', 'tw-border-violet-500').replace('tw-text-slate-600', 'tw-text-violet-600').replace('tw-bg-white', 'tw-bg-violet-50');
+    btn.className += ' tw-bg-violet-50 tw-border-violet-500 tw-text-violet-600';
     btn.setAttribute('aria-pressed', 'true');
     content.innerHTML = renderer[tab]();
   });
