@@ -2,7 +2,7 @@
 
 A family worship planner with a worship queue, song roster, and service-flow timeline.  
 
-Live: `https://placeholder.vercel.app`
+Live: `https://family-worship-interactive-ddq1ni61o-rojo12.vercel.app`
 
 ## Stack
 - Vite + Vanilla TypeScript + Tailwind CSS (dark mode)
