@@ -4,6 +4,7 @@
 
 :root { color-scheme: light; }
 html.dark { color-scheme: dark; }
+
 body {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background:
@@ -14,6 +15,7 @@ body {
   transition: background .25s ease, color .25s ease;
 }
 html.dark body { background:#0b1120; color:#e2e8f0; }
+
 .app-shell { max-width: 1120px; margin: 0 auto; }
 .app-shell > header { border-radius: 18px; margin: 14px 0 18px; }
 .app-shell > main {
@@ -25,7 +27,67 @@ html.dark body { background:#0b1120; color:#e2e8f0; }
 }
 html.dark .app-shell > main { background: rgba(15,18,34,.55); }
 .app-shell > footer { border-radius: 18px; margin-bottom: 14px; }
-.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
-.wrap { display: flex; flex-wrap: wrap; }
 
-/* end-page css */
+.tw-card {
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.tw-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.10); }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* View transitions (view-transitions skill) */
+::view-transition-old(*) { animation-duration: .25s; animation-timing-function: ease-out; }
+::view-transition-new(*) { animation-duration: .25s; animation-timing-function: ease-out; }
+
+/* Flashcard flip */
+.tw-flashcard {
+  transform-style: preserve-3d;
+  transition: transform .5s cubic-bezier(.4, 0, .2, 1);
+}
+.tw-flashcard.tw-rotate-y-180 { transform: rotateY(180deg); }
+.tw-flashcard > div { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+
+/* Tab transitions */
+.tab-transition-new {
+  animation: fadeIn .2s ease-out, fadeInUp .35s ease-out .05s;
+}
+.tab-transition-old {
+  animation: fadeOut .2s ease-in;
+}
+
+/* Staggered list reveal */
+.reveal { animation: fadeInUp .4s ease-out forwards; }
+.reveal-1 { animation-delay: .05s; }
+.reveal-2 { animation-delay: .10s; }
+.reveal-3 { animation-delay: .15s; }
+.reveal-4 { animation-delay: .20s; }
+.reveal-5 { animation-delay: .25s; }
+
+/* Bingo & memory grid polish */
+.tw-bingo-cell:hover { transform: scale(1.04); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+html.dark ::-webkit-scrollbar-thumb { background: #475569; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

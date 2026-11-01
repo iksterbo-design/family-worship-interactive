@@ -1,0 +1,223 @@
+import * as data from './data/mock';
+import { Card, Empty } from './components/ui';
+import { cardDecks, getAllQuizQuestions, habits } from './games/cards';
+
+const members = data.Member as any[];
+const worship = data.Worship as any[];
+const queue = data.SongQueue as any[];
+
+export function App(): HTMLElement {
+  const root = document.createElement('div');
+  root.className = 'tw-flex tw-flex-col tw-gap-4';
+
+  // ---- Tab navigation ----
+  const tabs = [
+    { id: 'worship', label: 'Worship', icon: '🙏' },
+    { id: 'songs', label: 'Songs', icon: '🎵' },
+    { id: 'members', label: 'Members', icon: '👨‍👩‍👧‍👦' },
+    { id: 'games', label: 'Games & Learning', icon: '🧠' },
+    { id: 'habits', label: 'Habits', icon: '🔥' },
+  ];
+  const tabBar = document.createElement('div');
+  tabBar.className = 'tw-flex tw-gap-1 tw-border tw-border-slate-200 tw-rounded-xl tw-bg-white twp-1 tw-shadow-sm tw-mb-4';
+  for (const t of tabs) {
+    const b = document.createElement('button');
+    b.className = 'tw-flex tw-flex-1 tw-items-center tw-justify-center tw-gap-2 tw-text-sm tw-font-medium tw-rounded-md tw-px-3 tw-py-2 tw-transition twduration-200 tw-text-left';
+    b.innerHTML = `<span class="tw-text-base">${t.icon}</span>${t.label}`;
+    b.dataset.tab = t.id;
+    b.setAttribute('aria-label', t.label);
+    tabBar.appendChild(b);
+  }
+  root.appendChild(tabBar);
+
+  const content = document.createElement('div');
+  content.className = 'tw-grid tw-grid-cols-1 lg:tw-grid-cols-3 tw-gap-4';
+  root.appendChild(content);
+
+  const renderWorship = (): string => {
+    const stats = [
+      ['Family members', members.length.toString()],
+      ['Active gatherings', worship.length.toString()],
+      ['Song queue items', queue.length.toString()],
+    ];
+    const statsHtml = stats.map(s =>
+      '<Card title="' + s[0] + '"><div class="tw-text-2xl tw-font-bold tw-text-slate-800">' + s[1] + '</div><div class="tw-text-xs tw-text-slate-500"></div></Card>'
+    ).join('');
+    const flow = [['Opening prayer', '0:00'], ['Worship songs', '0:20'], ['Scripture reading', '0:40'], ['Offering', '0:55'], ['Prayer & blessing', '1:05']];
+    const flowHtml = flow.map(([t, d]) =>
+      '<div class="tw-flex tw-items-center tw-gap-2 tw-text-sm tw-text-slate-600"><span class="tw-h-2 tw-h-2 tw-rounded-full tw-bg-violet-500"></span>' + t + '<span class="tw-text-xs tw-text-slate-400">' + d + '</span></div>'
+    ).join('');
+    const memberBox = document.getElementById('members') as HTMLElement;
+    memberBox.innerHTML = members.map(m =>
+      '<div class="tw-flex tw-items-center tw-gap-2 tw-border tw-border-slate-200 tw-rounded-md tw-px-3 tw-py-2 tw-bg-white tw-shadow-sm tw-hover:shadow-md tw-transition">' +
+        '<span class="tw-text-sm tw-font-semibold tw-text-slate-800">' + m.name + '</span>' +
+        '<span class="tw-text-xs tw-text-slate-500">' + m.role + '</span>' +
+        '<span class="tw-text-xs tw-text-slate-500">' + m.contributions + ' contrib</span>' +
+        '<button class="tw-bg-violet-500 tw-text-white tw-rounded-md tw-px-2 tw-py-1 tw-text-xs tw-hover:bg-violet-600 tw-transition">+1</button>' +
+      '</div>').join('');
+    const queueBox = document.getElementById('queue') as HTMLElement;
+    queueBox.innerHTML = queue.map(q =>
+      '<div class="tw-flex tw-items-center tw-gap-3 tw-px-2 tw-py-1.5 tw-border-b tw-border-slate-100 tw-hover:bg-slate-50 tw-transition">' +
+        '<span class="tw-text-xs tw-text-slate-500">' + q.song + '</span>' +
+        '<span class="tw-text-xs tw-text-slate-500 tw-w-20">' + q.church + '</span>' +
+        '<button class="tw-bg-slate-200 tw-text-slate-700 tw-rounded-md tw-px-2 tw-py-1 tw-text-xs tw-hover:bg-emerald-200 tw-transition">Play</button>' +
+      '</div>').join('');
+    return `
+      <div class="lg:tw-span-2">
+        <div class="tw-flex tw-items-center tw-gap-3 tw-mb-3">
+          <span class="tw-font-semibold tw-text-slate-800">Total moves</span>
+          <span id="stat-contrib" class="tw-text-lg tw-font-bold tw-text-violet-600">0</span>
+        </div>
+        <div class="tw-grid tw-grid-cols-1 tw-gap-3">${statsHtml}</div>
+        <Card title="Worship Service Flow" desc="Family worship service timeline">
+          <div class="tw-mt-3">${flowHtml}</div>
+        </Card>
+        <Card title="Prayer Requests" desc="Share prayers for the family">
+          <div id="prayers" class="tw-mt-2 tw-space-y-2 tw-text-sm" data-items=""></div>
+          <button class="tw-bg-slate-100 tw-text-slate-600 tw-rounded-md tw-px-3 tw-py-1.5 tw-text-xs tw-my-2 tw-hover:bg-violet-100 tw-transition">+ Add prayer</button>
+        </Card>
+      </div>
+      <div class="lg:tw-w-80">
+        <Card title="Worship Songs" desc="Song queue">
+          <div id="queue" class="tw-max-h-64 tw-overflow-y-auto tw-text-sm tw-space-y-1"></div>
+        </Card>
+        <Card title="Family Roster" desc="Contributions on stage">
+          <div id="members" class="tw-max-h-64 tw-overflow-y-auto tw-text-sm tw-space-y-1"></div>
+        </Card>
+      </div>
+    `;
+  };
+
+  const renderSongs = (): string => {
+    return `
+      <Card title="Song Queue" desc="Select a song to hear">
+        <div id="queue" class="tw-max-h-64 tw-overflow-y-auto tw-text-sm tw-space-y-1">
+          ${queue.map(q =>
+            '<div class="tw-flex tw-items-center tw-gap-3 tw-px-2 tw-py-1.5 tw-border-b tw-border-slate-100 tw-hover:bg-slate-50 twcursor-pointer">' +
+              '<span class="tw-text-xs tw-text-slate-500">' + q.song + '</span>' +
+              '<span class="tw-text-xs tw-text-slate-500 tw-w-20">' + q.church + '</span>' +
+              '<button class="tw-bg-emerald-500 tw-text-white tw-rounded-md tw-px-3 tw-py-1 tw-text-xs tw-font-bold tw-hover:bg-emerald-600 tw-transition">Play</button>' +
+            '</div>'
+          ).join('')}
+          <div class="tw-mt-2 tw-text-center tw-text-xs tw-text-slate-400">+ Add song to queue</div>
+        </div>
+      </Card>
+    `;
+  };
+
+  const renderMembers = (): string => {
+    return `
+      <Card title="Family Roster" desc="Family members and their contributions">
+        <div id="members" class="tw-max-h-64 tw-overflow-y-auto tw-text-sm tw-space-y-1">
+          ${members.map(m =>
+            '<div class="tw-flex tw-items-center tw-gap-2 tw-px-2 tw-py-1.5 tw-border-b tw-border-slate-100 tw-hover:bg-slate-50">' +
+              '<span class="tw-text-sm tw-font-semibold tw-text-slate-800">' + m.name + '</span>' +
+              '<span class="tw-text-xs tw-text-slate-500">' + m.role + '</span>' +
+              '<span class="tw-text-xs tw-text-slate-500">' + m.contributions + ' contrib</span>' +
+            '</div>'
+          ).join('')}
+          <div class="tw-mt-2 tw-text-center tw-text-xs tw-text-slate-400">+ Add member</div>
+        </div>
+      </Card>
+    `;
+  };
+
+  const renderGames = (): string => {
+    const quizQs = getAllQuizQuestions();
+    let quizHtml = '';
+    if (quizQs.length === 0) {
+      quizHtml = '<Empty msg="No quiz questions loaded." />';
+    } else {
+      const shown = quizQs.slice(0, 5);
+      const qHtml = shown.map((q, i) =>
+        '<div class="tw-mb-4 tw-border tw-border-slate-200 tw-rounded-lg tw-px-3 tw-bg-white tw-shadow-sm">' +
+          '<p class="tw-text-sm tw-font-medium tw-text-slate-800">' + (i+1) + '. ' + q.question + '</p>' +
+          '<div class="tw-mt-2 tw-flex tw-flex-wrap tw-gap-2">' +
+            q.options.map((opt) =>
+              '<button class="tw-text-sm tw-px-3 tw-py-1.5 tw-rounded-md tw-border tw-border-slate-200 tw-bg-white tw-text-slate-700 tw-hover:border-violet-300 tw-transition">' + opt + '</button>'
+            ).join('')
+          '</div>' +
+          '<p class="tw-text-xs tw-text-slate-400 tw-mt-1 twhidden">' + q.explanation + '</p>' +
+        '</div>'
+      ).join('');
+      quizHtml = `
+        <Card title="Bible Quiz" desc="Test your knowledge">
+          <div class="tw-mt-2 tw-space-y-2">${qHtml}</div>
+          <div class="tw-mt-2 tw-text-center tw-text-xs tw-text-slate-400">← Select a question to begin · Tap an answer to check</div>
+        </Card>
+      `;
+    }
+
+    const decksHtml = cardDecks.map(d =>
+      '<button class="tw-w-full tw-text-left tw-px-3 tw-py-2 tw-rounded-md tw-border tw-border-slate-200 tw-bg-white tw-text-left tw-space-y-1 tw-hover:border-violet-300 tw-transition">' +
+        '<span class="tw-text-sm tw-font-semibold tw-text-slate-800">' + d.icon + ' ' + d.title + '</span>' +
+        '<span class="tw-text-xs tw-text-slate-400">' + d.count + ' cards</span>' +
+      '</button>'
+    ).join('');
+
+    return `
+      <div class="lg:tw-span-2">
+        <Card title="Flashcards" desc="Study scripture by card">
+          <div class="tw-mt-2 tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-2">${decksHtml}</div>
+        </Card>
+        <Card title="Games & Learning" desc="Interactive learning for the family">
+          <div class="tw-mt-2 tw-space-y-3">
+            <div class="tw-text-sm tw-text-slate-700 tw-font-medium">📖 Flashcard Decks</div>
+            <div class="tw-mt-1 tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-2">${decksHtml}</div>
+            <div class="tw-mt-3 tw-border-t tw-border-slate-200 tw-pt-2">
+              <div class="tw-text-sm tw-text-slate-700 tw-font-medium tw-mb-1">🧠 Quiz Mode</div>
+              ${quizHtml}
+            </div>
+          </div>
+        </Card>
+      </div>
+    `;
+  };
+
+  const renderHabits = (): string => {
+    const habitsHtml = habits.map(h =>
+      '<div class="tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-border-b tw-border-slate-100 tw-bg-white tw-shadow-sm tw-rounded-lg tw-hover:shadow-md tw-transition">' +
+        '<span class="tw-text-2xl">' + h.icon + '</span>' +
+        '<div class="tw-flex-1 tw-min-w-0">' +
+          '<p class="tw-text-sm tw-font-medium tw-text-slate-800">' + h.name + '</p>' +
+          '<p class="tw-text-xs tw-text-slate-400">' + h.frequency + ' · goal ' + h.goal + ' ' + (h.frequency === 'daily' ? 'days' : 'weeks') + '</p>' +
+        '</div>' +
+        '<div class="tw-flex tw-items-center tw-gap-2">' +
+          '<div class="tw-h-2 tw-w-24 tw-rounded-full tw-bg-slate-200 tw-overflow-hidden"><div class="tw-h-full tw-w-0 tw-rounded-full tw-bg-violet-500 tw-transition-all tw-duration-500"></div></div>' +
+          '<span class="tw-text-xs tw-text-slate-500 tw-font-medium">0/' + h.goal + '</span>' +
+        '</div>' +
+      '</div>'
+    ).join('');
+    return `
+      <Card title="Family Habits" desc="Track daily spiritual habits">
+        <div class="tw-mt-2 tw-space-y-2">
+          ${habitsHtml}
+        </div>
+        <button class="tw-bg-slate-100 tw-text-slate-600 tw-rounded-md tw-px-3 tw-py-1.5 tw-text-xs tw-my-2 tw-hover:bg-violet-100 tw-transition">+ Add habit</button>
+      </Card>
+    `;
+  };
+
+  const renderer = {
+    worship: renderWorship,
+    songs: renderSongs,
+    members: renderMembers,
+    games: renderGames,
+    habits: renderHabits,
+  };
+
+  tabBar.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('button[data-tab]');
+    if (!btn) return;
+    const tab = btn.dataset.tab as keyof typeof renderer;
+    tabBar.querySelectorAll('button').forEach(b => {
+      b.classList.remove('tw-border-violet-500', 'tw-text-violet-600', 'tw-bg-violet-50');
+      b.classList.add('tw-border-slate-200', 'tw-text-slate-600', 'tw-bg-white');
+    });
+    btn.classList.add('tw-border-violet-500', 'tw-text-violet-600', 'tw-bg-violet-50');
+    content.innerHTML = renderer[tab]();
+  });
+
+  content.innerHTML = renderer.worship();
+  return root;
+}
